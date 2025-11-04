@@ -18,6 +18,10 @@ from qrcode.image.svg import SvgPathImage as svg
 
 from rest_framework.authtoken.models import Token
 
+from ptart.tools.filters import (
+    get_filter_from_request
+)
+
 from .models import (
     Assessment,
     Project,
@@ -105,7 +109,7 @@ def projects_all(request):
 def archives_all(request):
     return generic_all(
         request,
-        Project.get_archived_viewable(request.user),
+        Project.get_archived_viewable(request.user, get_filter_from_request(request)),
         ProjectTable,
         "archives/archives-list.html",
     )

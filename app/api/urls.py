@@ -29,6 +29,7 @@ urlpatterns = [
     ),
     re_path(r"^screenshot/png/(?P<pk>[0-9]+)/$", views.screenshot_raw),
     re_path(r"^screenshots/$", views.screenshots),
+    re_path(r"^archives/$", views.archives),
     re_path(r"^attachment/(?P<pk>[0-9]+)/$", views.attachment),
     re_path(r"^attachment/raw/(?P<pk>[0-9]+)/$", views.attachment_raw),
     re_path(r"^attachments/$", views.attachments),

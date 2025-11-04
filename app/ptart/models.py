@@ -15,7 +15,7 @@ from ptart.tools.screenshots import (
     extract_images_from_markdown,
     prune_images_from_markdown,
 )
-
+from ptart.tools.filters import search_with_filter
 
 """Tool model."""
 
@@ -331,29 +331,26 @@ class Project(models.Model):
                         cwes.append(cwe)
         return cwes
 
-    def get_viewable(user):
-        """Returns all viewable & non-archived projects"""
-        return (
-            Project.objects.filter(
-                Q(pentesters__in=[user])
-                | Q(reviewers__in=[user])
-                | Q(viewers__in=[user])
-            )
-            .filter(archived=False)
-            .distinct()
-        )
+    def get_viewable(user, filters=None):
+        """Return all viewable projects with filters"""
+        qs = Project.objects.filter(
+            Q(pentesters__in=[user]) |
+            Q(reviewers__in=[user]) |
+            Q(viewers__in=[user])
+        ).filter(archived=False).distinct()
+        
+        return search_with_filter(qs, filters, Project) if filter else qs
 
-    def get_archived_viewable(user):
+    def get_archived_viewable(user, filters=None):
         """Returns all viewable & non-archived projects"""
-        return (
-            Project.objects.filter(
+       
+        qs = Project.objects.filter(
                 Q(pentesters__in=[user])
                 | Q(reviewers__in=[user])
                 | Q(viewers__in=[user])
-            )
-            .filter(archived=True)
-            .distinct()
-        )
+            ).filter(archived=True).distinct()
+        
+        return search_with_filter(qs, filters, Project) if filter else qs
 
     def is_user_can_view(self, user):
         """Verify if the user have read access for this project"""

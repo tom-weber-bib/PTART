@@ -30,6 +30,8 @@ import re
 import requests
 import zipfile
 
+from ptart.tools.filters import get_filter_from_request
+
 from ptart.models import (
     Flag,
     Hit,
@@ -270,6 +272,15 @@ def project(request, pk):
 def projects(request):
     return items(request, Project, ProjectSerializer)
 
+@csrf_exempt
+@ptart_authentication
+@api_view(["GET"])
+def archives(request):  
+    return Response(
+        ProjectSerializer(
+            Project.get_archived_viewable(request.user, get_filter_from_request(request)), many=True)
+            .data
+    )
 
 @csrf_exempt
 @ptart_authentication
@@ -2230,10 +2241,17 @@ def item(request, pk, class_name, serializer_name):
 #
 def items(request, class_name, serializer_name):
     response = None
+
     if request.method == "GET":
-        response = Response(
-            serializer_name(class_name.get_viewable(request.user), many=True).data
-        )
+        try:
+            response = Response(
+                serializer_name(class_name.get_viewable(request.user, get_filter_from_request(request)), many=True).data
+            )
+        except TypeError:
+            response = Response(
+                serializer_name(class_name.get_viewable(request.user), many=True).data
+            )
+
     elif request.method == "POST":
         serializer = serializer_name(data=request.data)
         if serializer.is_valid():
@@ -2246,6 +2264,7 @@ def items(request, class_name, serializer_name):
             response = Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     return response
+
 
 
 #
