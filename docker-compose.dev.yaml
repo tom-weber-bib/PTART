@@ -1,0 +1,30 @@
+services:
+  ptart-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
+    volumes:
+      - ./app:/opt/ptart
+      - medias:/opt/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      - ptart-db
+
+  ptart-db:
+    image: postgres:${POSTGRES_VERSION:-15}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ptart}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ptart}
+      POSTGRES_DB: ptart
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-db:/var/lib/postgresql/data
+
+volumes:
+  postgres-db:
+  staticfiles:
+  medias:

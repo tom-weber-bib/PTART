@@ -117,29 +117,115 @@ Access [http://localhost:8000/](http://localhost:8000/) on your favorite browser
 
 ## How to DEV
 
-### Preparing PTART
+### Quick setup with docker compose
 
-Python requires Python 3.13 and a few more packages. The simplest way to set up PTART is using [venv](https://docs.python.org/3/library/venv.html).
+The environment includes:
 
-1. Clone the project and go to the app directory.
-2. Copy `.env.template` file to `.env`
-3. Create a new virtual environment and installing dependencies: `python3.13 -m venv .venv`.
-4. Install pandoc (`brew install pandoc` or get the package from [Github](https://github.com/jgm/pandoc/releases)), PTARTv3 was tested with pandoc-3.2.X version, older versions are not supported.
-5. Run the virtual environment: `source .venv/bin/activate` and install dependencies `pip install -r requirements.txt` (If psycopg2 failed to be installed try `sudo apt-get install libpq-dev` or `brew install postgresql`, if rlPyCairo failed to be install, try `sudo apt install libcairo2-dev` or `brew install cairo pkg-config`)
-6. Start a sample postgres db :  `docker run -d --name ptart_db -e POSTGRES_USER=ptart -e POSTGRES_PASSWORD=ptart -e POSTGRES_DB=ptart -p 5432:5432 postgres:15`
-7. Create the database: `python manage.py migrate`
-8. Create the super user: `python manage.py createsuperuser`
-9. (Optional) Initiate PTART with integrated loaders.
+- Django (with auto-reload)
+- PostgreSQL
+- All required system dependencies (Pandoc, Cairo, etc.)
 
-That's all for the first time. Follow the next steps whenever you want to start PTART.
+#### Prerequisites
 
-### Starting PTART
+- Docker ≥ 24
+- Docker Compose ≥ v2
 
-1. Start PTART server: `python manage.py runserver`
-2. Access [http://127.0.0.1:8000/](http://127.0.0.1:8000/) on your favorite browser.
-3. Login with the user credentials.
-4. Welcome to PTART.
-5. Once you are done, stop the server: `Ctrl + C`
+#### Start the dev environment
+
+```bash
+git clone https://github.com/certmichelin/PTART.git
+cd PTART
+cp .env.template .env
+docker compose -f docker-compose.dev.yaml up --build -d
+```
+
+#### First time setup
+
+```bash
+docker compose -f docker-compose.dev.yaml exec ptart-server python manage.py migrate
+docker compose -f docker-compose.dev.yaml exec ptart-server python manage.py createsuperuser
+
+# Optional
+docker compose -f docker-compose.dev.yaml exec ptart-server python loader_cwes_4.17.py
+docker compose -f docker-compose.dev.yaml exec ptart-server python loader_owasp_testing_guide.py
+```
+
+#### Stop the environment
+
+```bash
+docker compose -f docker-compose.dev.yaml down
+```
+
+### Setup with local venv
+
+Prerequisites
+
+- Python 3.13
+- PostgreSQL
+- Pandoc 3.2.x
+- System libraries (libpq, cairo, etc.)
+
+### Project setup
+
+```bash
+git clone https://github.com/certmichelin/PTART.git
+cd PTART/app
+cp .env.template .env
+```
+
+Create a venv in `./app/.venv`
+
+```bash
+python3.13 -m venv .venv
+source .venv/bin/activate
+pip install -r app/requirements.txt
+```
+
+Install pandoc : 
+
+```bash
+# Linux
+# Get pandoc binary at https://github.com/jgm/pandoc/releases/latest
+wget https://github.com/jgm/pandoc/releases/download/3.8.3/pandoc-3.8.3-1-amd64.deb -O /tmp/pandoc.deb
+sudo dpkg -i /tmp/pandoc.deb
+
+# MacOS
+brew install pandoc
+
+# Windows
+choco install pandoc
+# OR
+# Get pandoc binary at https://github.com/jgm/pandoc/releases/latest
+```
+
+#### Database Setup
+
+```bash
+docker run -d --name ptart_db \
+  -e POSTGRES_USER=ptart \
+  -e POSTGRES_PASSWORD=ptart \
+  -e POSTGRES_DB=ptart \
+  -p 5432:5432 postgres:15
+```
+
+Or you can use your own external postgres database by changing values in `.env` file. Then, setup the tables and create the admin user : 
+
+```bash
+python manage.py migrate
+python manage.py createsuperuser
+
+# Optional
+python loader_cwes_4.17.py
+python loader_owasp_testing_guide.py
+```
+
+#### Starting PTART
+
+```bash
+python manage.py runserver
+```
+
+Then, you can access PTART at `http://127.0.0.1:8000` on your favorite web browser.
 
 ### Upgrading PTART
 
